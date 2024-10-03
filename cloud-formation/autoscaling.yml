@@ -1,0 +1,23 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates an Auto Scaling Group for the web servers.
+Parameters:
+  LaunchConfigName:
+    Type: String
+    Description: Name of the launch configuration
+  SubnetAZ1:
+    Type: String
+    Description: Subnet in AZ1
+  SubnetAZ2:
+    Type: String
+    Description: Subnet in AZ2
+  DesiredCapacity:
+    Type: Number
+    Description: Desired capacity of instances in the autoscaling group
+  MaxSize:
+    Type: Number
+    Description: Maximum number of instances in the autoscaling group
+  MinSize:
+    Type: Number
+    Description: Minimum number of instances in the autoscaling group
+

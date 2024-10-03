@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates a Nat gateway in each private subnet
+Parameters:
+  ExportVPC:
+    Description: The name of the vpc stack
+    Type: String
+
+Resources:
+# Create Elastic Ips
+  EIP1:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: VPC
+      Tags:
+        - Key: Name
+          Value: EIP1
+
+  EIP2:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: VPC
+      Tags:
+        - Key: Name
+          Value: EIP2
+
+# Create NAT gateway. Also not that for imported values declare the names as it is inthe output of the template you are refrencing from
+  PrivateSub1Natgateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP1.AllocationId
+      SubnetId: 
+        Fn::ImportValue: !Sub ${ExportVPC}-pubsub1
+      Tags: 
+        - Key: Name
+          Value: PrivateSub1Natgateway
+
+  PrivateSub2Natgateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP2.AllocationId
+      SubnetId: 
+        Fn::ImportValue: !Sub ${ExportVPC}-pubsub2
+      Tags: 
+        - Key: Name
+          Value: PrivateSub2Natgateway
+
+# Create Private Route Table
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Fn::ImportValue: !Sub ${ExportVPC}-VPCID
+      Tags:
+      - Key: Name
+        Value: pri-route-table1
+      
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:  
+        Fn::ImportValue: !Sub ${ExportVPC}-VPCID
+      Tags:
+      - Key: Name
+        Value: pri-route-table2
+
+# Private route and route table association
+  PrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+       RouteTableId:
+         Ref: PrivateRouteTable1
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: PrivateSub1Natgateway
+
+  PrivateSubnet1RouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::ImportValue: !Sub ${ExportVPC}-prisub1
+      RouteTableId:
+        Ref: PrivateRouteTable1
+
+
+  PrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+       RouteTableId:
+         Ref: PrivateRouteTable2
+       DestinationCidrBlock: 0.0.0.0/0
+       GatewayId:
+         Ref: PrivateSub2Natgateway
+
+  PrivateSubnet1RouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Fn::ImportValue: !Sub ${ExportVPC}-prisub2
+      RouteTableId:
+        Ref: PrivateRouteTable2
